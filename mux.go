@@ -8,7 +8,8 @@ import (
 )
 
 type Server struct {
-	MySelf http.Server
+	MySelf *http.Server
+	r      *Router
 }
 
 type Router struct {
@@ -18,12 +19,15 @@ type Router struct {
 func NewRouter() *Router {
 	return &Router{m: make(map[string]func(http.ResponseWriter, *http.Request))}
 }
-func NewServer(addr string) (*Server, *Router) {
-	r := NewRouter()
+func NewServer(addr string) *Server {
 	s := &Server{}
-	s.MySelf.Addr = addr
-	s.MySelf.Handler = r
-	return s, r
+	r := NewRouter()
+	s.MySelf = &http.Server{Addr: addr, Handler: r}
+	s.r = r
+	return s
+}
+func (mainServer *Server) ListenAndServe() error {
+	return mainServer.MySelf.ListenAndServe()
 }
 func (mainServer *Server) Stop() error {
 	if mainServer != nil {
@@ -35,6 +39,9 @@ func (mainServer *Server) Stop() error {
 		return e
 	}
 	return nil
+}
+func (mainServer *Server) HandleFunc(url string, f func(http.ResponseWriter, *http.Request)) {
+	mainServer.r.m[url] = f
 }
 func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if h, ok := router.m[r.URL.String()]; ok {
