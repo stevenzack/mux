@@ -9,21 +9,14 @@ import (
 
 type Server struct {
 	MySelf *http.Server
-	r      *router
+	r, mr  map[string]func(http.ResponseWriter, *http.Request)
 }
 
-type router struct {
-	m map[string]func(http.ResponseWriter, *http.Request)
-}
-
-func newRouter() *router {
-	return &router{m: make(map[string]func(http.ResponseWriter, *http.Request))}
-}
 func NewServer(addr string) *Server {
 	s := &Server{}
-	r := newRouter()
-	s.MySelf = &http.Server{Addr: addr, Handler: r}
-	s.r = r
+	s.MySelf = &http.Server{Addr: addr, Handler: s}
+	s.r = make(map[string]func(http.ResponseWriter, *http.Request))
+	s.mr = make(map[string]func(http.ResponseWriter, *http.Request))
 	return s
 }
 func (mainServer *Server) ListenAndServe() error {
@@ -41,18 +34,21 @@ func (mainServer *Server) Stop() error {
 	return nil
 }
 func (mainServer *Server) HandleFunc(url string, f func(http.ResponseWriter, *http.Request)) {
-	mainServer.r.m[url] = f
+	mainServer.r[url] = f
+}
+func (s *Server) HandleMultiReqs(url string, f func(http.ResponseWriter, *http.Request)) {
+	s.mr[url] = f
 }
 func (s *Server) Handle(pattern string, h http.Handler) {
-	s.r.m[pattern] = h.ServeHTTP
+	s.r[pattern] = h.ServeHTTP
 }
-func (rt *router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if h, ok := rt.m[r.URL.String()]; ok {
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if h, ok := s.r[r.URL.String()]; ok {
 		h(w, r)
-	} else if k, ok := hasPreffixInMap(rt.m, r.URL.String()); ok {
-		rt.m[k](w, r)
+	} else if k, ok := hasPreffixInMap(s.mr, r.URL.String()); ok {
+		s.mr[k](w, r)
 	} else {
-		fmt.Fprint(w, `<!DOCTYPE html><html><head><title>404</title><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head><body>404 not found</body></html>`)
+		fmt.Fprint(w, `<!DOCTYPE html><html><head><title>404</title><meta charset="utf-8"><meta name="viewpos" content="width=device-width"></head><body>404 not found</body></html>`)
 	}
 }
 func hasPreffixInMap(m map[string]func(http.ResponseWriter, *http.Request), p string) (string, bool) {
