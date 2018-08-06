@@ -8,8 +8,9 @@ import (
 )
 
 type Server struct {
-	MySelf *http.Server
-	r, mr  map[string]func(http.ResponseWriter, *http.Request)
+	MySelf      *http.Server
+	prehandlers []func(http.ResponseWriter, *http.Request)
+	r, mr       map[string]func(http.ResponseWriter, *http.Request)
 }
 
 func NewServer(addr string) *Server {
@@ -43,6 +44,9 @@ func (s *Server) Handle(pattern string, h http.Handler) {
 	s.r[pattern] = h.ServeHTTP
 }
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	for _, v := range s.prehandlers {
+		v(w, r)
+	}
 	if h, ok := s.r[r.URL.String()]; ok {
 		h(w, r)
 	} else if k, ok := hasPreffixInMap(s.mr, r.URL.String()); ok {
@@ -58,4 +62,7 @@ func hasPreffixInMap(m map[string]func(http.ResponseWriter, *http.Request), p st
 		}
 	}
 	return "", false
+}
+func (s *Server) AddPrehandler(f func(http.ResponseWriter, *http.Request)) {
+	s.prehandlers = append(s.prehandlers, f)
 }
