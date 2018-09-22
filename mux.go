@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -47,7 +48,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, v := range s.prehandlers {
 		v(w, r)
 	}
-	if h, ok := s.r[r.URL.String()]; ok {
+	url := strings.Split(r.URL.String(), "?")[0]
+	if h, ok := s.r[url]; ok {
 		h(w, r)
 	} else if k, ok := hasPreffixInMap(s.mr, r.URL.String()); ok {
 		s.mr[k](w, r)
