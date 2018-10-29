@@ -3,6 +3,7 @@ package mux
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"strings"
 	"time"
@@ -67,4 +68,8 @@ func hasPreffixInMap(m map[string]func(http.ResponseWriter, *http.Request), p st
 }
 func (s *Server) AddPrehandler(f func(http.ResponseWriter, *http.Request)) {
 	s.prehandlers = append(s.prehandlers, f)
+}
+func RandomPort() int {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	return 1000 + r.Intn(50000)
 }
