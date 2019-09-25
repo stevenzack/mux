@@ -3,7 +3,6 @@ package mux
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"net/http"
 	"strings"
 	"time"
@@ -22,9 +21,11 @@ func NewServer(addr string) *Server {
 	s.mr = make(map[string]func(http.ResponseWriter, *http.Request))
 	return s
 }
+
 func (mainServer *Server) ListenAndServe() error {
 	return mainServer.MySelf.ListenAndServe()
 }
+
 func (mainServer *Server) Stop() error {
 	if mainServer != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -36,15 +37,19 @@ func (mainServer *Server) Stop() error {
 	}
 	return nil
 }
+
 func (mainServer *Server) HandleFunc(url string, f func(http.ResponseWriter, *http.Request)) {
 	mainServer.r[url] = f
 }
+
 func (s *Server) HandleMultiReqs(url string, f func(http.ResponseWriter, *http.Request)) {
 	s.mr[url] = f
 }
+
 func (s *Server) Handle(pattern string, h http.Handler) {
 	s.r[pattern] = h.ServeHTTP
 }
+
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, v := range s.prehandlers {
 		v(w, r)
@@ -58,6 +63,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `<!DOCTYPE html><html><head><title>404</title><meta charset="utf-8"><meta name="viewpos" content="width=device-width"></head><body>404 not found</body></html>`)
 	}
 }
+
 func hasPreffixInMap(m map[string]func(http.ResponseWriter, *http.Request), p string) (string, bool) {
 	for k, _ := range m {
 		if len(p) >= len(k) && k == p[:len(k)] {
@@ -66,10 +72,7 @@ func hasPreffixInMap(m map[string]func(http.ResponseWriter, *http.Request), p st
 	}
 	return "", false
 }
+
 func (s *Server) AddPrehandler(f func(http.ResponseWriter, *http.Request)) {
 	s.prehandlers = append(s.prehandlers, f)
-}
-func RandomPort() int {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	return 1000 + r.Intn(50000)
 }
