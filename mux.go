@@ -76,3 +76,20 @@ func hasPreffixInMap(m map[string]func(http.ResponseWriter, *http.Request), p st
 func (s *Server) AddPrehandler(f func(http.ResponseWriter, *http.Request)) {
 	s.prehandlers = append(s.prehandlers, f)
 }
+
+// AddRoutes adds all s2's routes to server
+func (s *Server) AddRoutes(s2 *Server) {
+	for k, v := range s2.r {
+		_, ok := s.r[k]
+		if !ok {
+			s.r[k] = v
+		}
+	}
+
+	for k, v := range s2.mr {
+		_, ok := s.mr[k]
+		if !ok {
+			s.mr[k] = v
+		}
+	}
+}
