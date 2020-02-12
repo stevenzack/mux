@@ -22,24 +22,49 @@ func NewServer(addr string) *Server {
 	return s
 }
 
-func (mainServer *Server) ListenAndServe() error {
-	return mainServer.MySelf.ListenAndServe()
+func (s *Server) ListenAndServe() error {
+	return s.MySelf.ListenAndServe()
 }
 
-func (mainServer *Server) Stop() error {
-	if mainServer != nil {
+func (s *Server) Stop() error {
+	if s != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
 		// Doesn't block if no connections, but will otherwise wait
 		// until the timeout deadline.
-		e := mainServer.MySelf.Shutdown(ctx)
+		e := s.MySelf.Shutdown(ctx)
 		return e
 	}
 	return nil
 }
 
-func (mainServer *Server) HandleFunc(url string, f func(http.ResponseWriter, *http.Request)) {
-	mainServer.r[url] = f
+func (s *Server) HandleFunc(url string, f func(http.ResponseWriter, *http.Request)) {
+	s.r[url] = f
+}
+
+func (s *Server) HandleHtml(url string, text string) {
+	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte(text))
+	}
+}
+func (s *Server) HandleJs(url string, text string) {
+	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript")
+		w.Write([]byte(text))
+	}
+}
+func (s *Server) HandleCss(url string, text string) {
+	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/css")
+		w.Write([]byte(text))
+	}
+}
+func (s *Server) HandleSvg(url string, text string) {
+	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/svg+xml")
+		w.Write([]byte(text))
+	}
 }
 
 func (s *Server) HandleMultiReqs(url string, f func(http.ResponseWriter, *http.Request)) {
