@@ -42,28 +42,28 @@ func (s *Server) HandleFunc(url string, f func(http.ResponseWriter, *http.Reques
 	s.r[url] = f
 }
 
-func (s *Server) HandleHtml(url string, text string) {
+func (s *Server) HandleHtml(url string, text []byte) {
 	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(text))
+		w.Write(text)
 	}
 }
-func (s *Server) HandleJs(url string, text string) {
+func (s *Server) HandleJs(url string, text []byte) {
 	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript")
-		w.Write([]byte(text))
+		w.Write(text)
 	}
 }
-func (s *Server) HandleCss(url string, text string) {
+func (s *Server) HandleCss(url string, text []byte) {
 	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/css")
-		w.Write([]byte(text))
+		w.Write(text)
 	}
 }
-func (s *Server) HandleSvg(url string, text string) {
+func (s *Server) HandleSvg(url string, text []byte) {
 	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "image/svg+xml")
-		w.Write([]byte(text))
+		w.Write(text)
 	}
 }
 
