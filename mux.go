@@ -42,6 +42,13 @@ func (s *Server) HandleFunc(url string, f func(http.ResponseWriter, *http.Reques
 	s.r[url] = f
 }
 
+func (s *Server) HandleWoff(url string, bytes []byte) {
+	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
+		SetWoffHeader(w)
+		w.Write(bytes)
+	}
+}
+
 func (s *Server) HandleHtml(url string, text []byte) {
 	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")

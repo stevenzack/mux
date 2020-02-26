@@ -31,6 +31,10 @@ func SetHtmlHeader(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/html")
 }
 
+func SetWoffHeader(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/font-woff")
+}
+
 func WriteHtml(w http.ResponseWriter, html string) {
 	SetHtmlHeader(w)
 	w.Write([]byte(html))
