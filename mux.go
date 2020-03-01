@@ -10,7 +10,7 @@ import (
 
 type Server struct {
 	MySelf      *http.Server
-	prehandlers []func(http.ResponseWriter, *http.Request)
+	prehandlers []func(http.ResponseWriter, *http.Request) bool
 	r, mr       map[string]func(http.ResponseWriter, *http.Request)
 }
 
@@ -84,7 +84,10 @@ func (s *Server) Handle(pattern string, h http.Handler) {
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, v := range s.prehandlers {
-		v(w, r)
+		interrupt := v(w, r)
+		if interrupt {
+			return
+		}
 	}
 	url := strings.Split(r.URL.String(), "?")[0]
 	if h, ok := s.r[url]; ok {
@@ -105,7 +108,8 @@ func hasPreffixInMap(m map[string]func(http.ResponseWriter, *http.Request), p st
 	return "", false
 }
 
-func (s *Server) AddPrehandler(f func(http.ResponseWriter, *http.Request)) {
+// AddPrehandler adds prehandler which returns interrupt
+func (s *Server) AddPrehandler(f func(http.ResponseWriter, *http.Request) bool) {
 	s.prehandlers = append(s.prehandlers, f)
 }
 
