@@ -3,7 +3,9 @@ package mux
 import (
 	"context"
 	"fmt"
+	"mime"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 )
@@ -40,6 +42,13 @@ func (s *Server) Stop() error {
 
 func (s *Server) HandleFunc(url string, f func(http.ResponseWriter, *http.Request)) {
 	s.r[url] = f
+}
+
+func (s *Server) ServeFile(url string, bytes []byte) {
+	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", mime.TypeByExtension(path.Ext(url)))
+		w.Write(bytes)
+	}
 }
 
 func (s *Server) HandleWoff(url string, bytes []byte) {
