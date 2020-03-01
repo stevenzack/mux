@@ -44,7 +44,7 @@ func (s *Server) HandleFunc(url string, f func(http.ResponseWriter, *http.Reques
 	s.r[url] = f
 }
 
-func (s *Server) ServeFile(url string, bytes []byte) {
+func (s *Server) ServeBytes(url string, bytes []byte) {
 	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", mime.TypeByExtension(path.Ext(url)))
 		w.Write(bytes)
