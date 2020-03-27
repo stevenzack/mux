@@ -51,6 +51,12 @@ func (s *Server) ServeBytes(url string, bytes []byte) {
 	}
 }
 
+func (s *Server) ServeFile(uri string, path string) {
+	s.r[uri] = func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, path)
+	}
+}
+
 func (s *Server) HandleWoff(url string, bytes []byte) {
 	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
 		SetWoffHeader(w)
