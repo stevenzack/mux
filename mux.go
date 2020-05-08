@@ -11,9 +11,10 @@ import (
 )
 
 type Server struct {
-	MySelf      *http.Server
-	prehandlers []func(http.ResponseWriter, *http.Request) bool
-	r, mr       map[string]func(http.ResponseWriter, *http.Request)
+	MySelf                        *http.Server
+	prehandlers                   []func(http.ResponseWriter, *http.Request) bool
+	r, mr                         map[string]func(http.ResponseWriter, *http.Request)
+	get, post, put, delete, patch map[string]func(http.ResponseWriter, *http.Request)
 }
 
 func NewServer(addr string) *Server {
@@ -21,6 +22,11 @@ func NewServer(addr string) *Server {
 	s.MySelf = &http.Server{Addr: addr, Handler: s}
 	s.r = make(map[string]func(http.ResponseWriter, *http.Request))
 	s.mr = make(map[string]func(http.ResponseWriter, *http.Request))
+	s.get = make(map[string]func(http.ResponseWriter, *http.Request))
+	s.post = make(map[string]func(http.ResponseWriter, *http.Request))
+	s.put = make(map[string]func(http.ResponseWriter, *http.Request))
+	s.delete = make(map[string]func(http.ResponseWriter, *http.Request))
+	s.patch = make(map[string]func(http.ResponseWriter, *http.Request))
 	return s
 }
 
@@ -38,6 +44,26 @@ func (s *Server) Stop() error {
 		return e
 	}
 	return nil
+}
+
+func (s *Server) GET(url string, f func(http.ResponseWriter, *http.Request)) {
+	s.get[url] = f
+}
+
+func (s *Server) POST(url string, f func(http.ResponseWriter, *http.Request)) {
+	s.post[url] = f
+}
+
+func (s *Server) PUT(url string, f func(http.ResponseWriter, *http.Request)) {
+	s.put[url] = f
+}
+
+func (s *Server) DELETE(url string, f func(http.ResponseWriter, *http.Request)) {
+	s.delete[url] = f
+}
+
+func (s *Server) PATCH(url string, f func(http.ResponseWriter, *http.Request)) {
+	s.patch[url] = f
 }
 
 func (s *Server) HandleFunc(url string, f func(http.ResponseWriter, *http.Request)) {
@@ -105,6 +131,35 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	url := strings.Split(r.URL.String(), "?")[0]
+
+	switch r.Method {
+	case http.MethodGet:
+		if h, ok := s.get[url]; ok {
+			h(w, r)
+			return
+		}
+	case http.MethodPost:
+		if h, ok := s.post[url]; ok {
+			h(w, r)
+			return
+		}
+	case http.MethodPut:
+		if h, ok := s.put[url]; ok {
+			h(w, r)
+			return
+		}
+	case http.MethodDelete:
+		if h, ok := s.delete[url]; ok {
+			h(w, r)
+			return
+		}
+	case http.MethodPatch:
+		if h, ok := s.patch[url]; ok {
+			h(w, r)
+			return
+		}
+	}
+
 	if h, ok := s.r[url]; ok {
 		h(w, r)
 	} else if k, ok := hasPreffixInMap(s.mr, r.URL.String()); ok {
@@ -112,6 +167,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	} else {
 		fmt.Fprint(w, `<!DOCTYPE html><html><head><title>404</title><meta charset="utf-8"><meta name="viewpos" content="width=device-width"></head><body>404 not found</body></html>`)
 	}
+}
+
+func (s *Server) findMethod(url string) (string, func(http.ResponseWriter, *http.Request), bool) {
+
+	return "", nil, false
 }
 
 func hasPreffixInMap(m map[string]func(http.ResponseWriter, *http.Request), p string) (string, bool) {
