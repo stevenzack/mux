@@ -11,7 +11,7 @@ import (
 )
 
 type Server struct {
-	MySelf                        *http.Server
+	HTTPServer                    *http.Server
 	prehandlers                   []func(http.ResponseWriter, *http.Request) bool
 	r, mr                         map[string]func(http.ResponseWriter, *http.Request)
 	get, post, put, delete, patch map[string]func(http.ResponseWriter, *http.Request)
@@ -19,7 +19,7 @@ type Server struct {
 
 func NewServer(addr string) *Server {
 	s := &Server{}
-	s.MySelf = &http.Server{Addr: addr, Handler: s}
+	s.HTTPServer = &http.Server{Addr: addr, Handler: s}
 	s.r = make(map[string]func(http.ResponseWriter, *http.Request))
 	s.mr = make(map[string]func(http.ResponseWriter, *http.Request))
 	s.get = make(map[string]func(http.ResponseWriter, *http.Request))
@@ -31,7 +31,7 @@ func NewServer(addr string) *Server {
 }
 
 func (s *Server) ListenAndServe() error {
-	return s.MySelf.ListenAndServe()
+	return s.HTTPServer.ListenAndServe()
 }
 
 func (s *Server) Stop() error {
@@ -40,7 +40,7 @@ func (s *Server) Stop() error {
 		defer cancel()
 		// Doesn't block if no connections, but will otherwise wait
 		// until the timeout deadline.
-		e := s.MySelf.Shutdown(ctx)
+		e := s.HTTPServer.Shutdown(ctx)
 		return e
 	}
 	return nil
