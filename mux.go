@@ -96,6 +96,14 @@ func (s *Server) HandleHtml(url string, text []byte) {
 		w.Write(text)
 	}
 }
+
+func (s *Server) HandleHtmlFunc(url string, fn func(w http.ResponseWriter, r *http.Request)) {
+	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		fn(w, r)
+	}
+}
+
 func (s *Server) HandleJs(url string, text []byte) {
 	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript")
