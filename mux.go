@@ -6,6 +6,7 @@ import (
 	"mime"
 	"net/http"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -89,7 +90,12 @@ func (s *Server) HandleWoff(url string, bytes []byte) {
 		w.Write(bytes)
 	}
 }
-
+func (s *Server) HandleRes(url string, bytes []byte) {
+	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", mime.TypeByExtension(filepath.Ext(url)))
+		w.Write(bytes)
+	}
+}
 func (s *Server) HandleHtml(url string, text []byte) {
 	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
