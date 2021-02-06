@@ -74,6 +74,7 @@ func (s *Server) HandleFunc(url string, f func(http.ResponseWriter, *http.Reques
 func (s *Server) ServeBytes(url string, bytes []byte) {
 	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", mime.TypeByExtension(path.Ext(url)))
+		w.Header().Set("Cache-Control", "public")
 		w.Write(bytes)
 	}
 }
@@ -93,12 +94,14 @@ func (s *Server) HandleWoff(url string, bytes []byte) {
 func (s *Server) HandleRes(url string, bytes []byte) {
 	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", mime.TypeByExtension(filepath.Ext(url)))
+		w.Header().Set("Cache-Control", "public")
 		w.Write(bytes)
 	}
 }
 func (s *Server) HandleHtml(url string, text []byte) {
 	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
+		w.Header().Set("Cache-Control", "public")
 		w.Write(text)
 	}
 }
@@ -106,6 +109,7 @@ func (s *Server) HandleHtml(url string, text []byte) {
 func (s *Server) HandleHtmlFunc(url string, fn func(w http.ResponseWriter, r *http.Request)) {
 	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
+		w.Header().Set("Cache-Control", "public")
 		fn(w, r)
 	}
 }
@@ -113,18 +117,21 @@ func (s *Server) HandleHtmlFunc(url string, fn func(w http.ResponseWriter, r *ht
 func (s *Server) HandleJs(url string, text []byte) {
 	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript")
+		w.Header().Set("Cache-Control", "public")
 		w.Write(text)
 	}
 }
 func (s *Server) HandleCss(url string, text []byte) {
 	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/css")
+		w.Header().Set("Cache-Control", "public")
 		w.Write(text)
 	}
 }
 func (s *Server) HandleSvg(url string, text []byte) {
 	s.r[url] = func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "image/svg+xml")
+		w.Header().Set("Cache-Control", "public")
 		w.Write(text)
 	}
 }
