@@ -2,9 +2,7 @@ package mux
 
 import (
 	"context"
-	"embed"
 	"fmt"
-	"log"
 	"mime"
 	"net/http"
 	"path"
@@ -71,14 +69,6 @@ func (s *Server) PATCH(url string, f func(http.ResponseWriter, *http.Request)) {
 
 func (s *Server) HandleFunc(url string, f func(http.ResponseWriter, *http.Request)) {
 	s.r[url] = f
-}
-
-func (s *Server) ServeFS(url string, fs embed.FS, name string) {
-	bytes, e := fs.ReadFile(name)
-	if e != nil {
-		log.Fatal(e)
-	}
-	s.ServeBytes(url, bytes)
 }
 
 func (s *Server) ServeBytes(url string, bytes []byte) {
