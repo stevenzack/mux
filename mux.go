@@ -3,10 +3,12 @@ package mux
 import (
 	"context"
 	"fmt"
+	"log"
 	"mime"
 	"net/http"
 	"path"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"time"
 )
@@ -145,6 +147,12 @@ func (s *Server) Handle(pattern string, h http.Handler) {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if e := recover(); e != nil {
+			log.Println("⚠️", r.RequestURI, "⚠️\t", e, string(debug.Stack()))
+		}
+	}()
+
 	for _, v := range s.prehandlers {
 		interrupt := v(w, r)
 		if interrupt {
