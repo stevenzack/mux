@@ -62,7 +62,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func hasPreffixInMap(m map[string]func(http.ResponseWriter, *http.Request), p string) (string, bool) {
+func hasPreffixInMap(m map[string]http.HandlerFunc, p string) (string, bool) {
 	for k, _ := range m {
 		if len(p) >= len(k) && k == p[:len(k)] {
 			return k, true

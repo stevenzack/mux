@@ -13,20 +13,20 @@ type Server struct {
 	HTTPServer                    *http.Server
 	middlewares                   []Middleware
 	prehandlers                   []func(http.ResponseWriter, *http.Request) bool
-	r, mr                         map[string]func(http.ResponseWriter, *http.Request)
-	get, post, put, delete, patch map[string]func(http.ResponseWriter, *http.Request)
+	r, mr                         map[string]http.HandlerFunc
+	get, post, put, delete, patch map[string]http.HandlerFunc
 }
 
 func NewServer(addr string) *Server {
 	s := &Server{}
 	s.HTTPServer = &http.Server{Addr: addr, Handler: s}
-	s.r = make(map[string]func(http.ResponseWriter, *http.Request))
-	s.mr = make(map[string]func(http.ResponseWriter, *http.Request))
-	s.get = make(map[string]func(http.ResponseWriter, *http.Request))
-	s.post = make(map[string]func(http.ResponseWriter, *http.Request))
-	s.put = make(map[string]func(http.ResponseWriter, *http.Request))
-	s.delete = make(map[string]func(http.ResponseWriter, *http.Request))
-	s.patch = make(map[string]func(http.ResponseWriter, *http.Request))
+	s.r = make(map[string]http.HandlerFunc)
+	s.mr = make(map[string]http.HandlerFunc)
+	s.get = make(map[string]http.HandlerFunc)
+	s.post = make(map[string]http.HandlerFunc)
+	s.put = make(map[string]http.HandlerFunc)
+	s.delete = make(map[string]http.HandlerFunc)
+	s.patch = make(map[string]http.HandlerFunc)
 	return s
 }
 
@@ -51,27 +51,27 @@ func (s *Server) AddPrehandler(f func(http.ResponseWriter, *http.Request) bool) 
 	s.prehandlers = append(s.prehandlers, f)
 }
 
-func (s *Server) GET(url string, f func(http.ResponseWriter, *http.Request)) {
+func (s *Server) GET(url string, f http.HandlerFunc) {
 	s.get[url] = f
 }
 
-func (s *Server) POST(url string, f func(http.ResponseWriter, *http.Request)) {
+func (s *Server) POST(url string, f http.HandlerFunc) {
 	s.post[url] = f
 }
 
-func (s *Server) PUT(url string, f func(http.ResponseWriter, *http.Request)) {
+func (s *Server) PUT(url string, f http.HandlerFunc) {
 	s.put[url] = f
 }
 
-func (s *Server) DELETE(url string, f func(http.ResponseWriter, *http.Request)) {
+func (s *Server) DELETE(url string, f http.HandlerFunc) {
 	s.delete[url] = f
 }
 
-func (s *Server) PATCH(url string, f func(http.ResponseWriter, *http.Request)) {
+func (s *Server) PATCH(url string, f http.HandlerFunc) {
 	s.patch[url] = f
 }
 
-func (s *Server) HandleFunc(url string, f func(http.ResponseWriter, *http.Request)) {
+func (s *Server) HandleFunc(url string, f http.HandlerFunc) {
 	s.r[url] = f
 }
 
@@ -140,7 +140,7 @@ func (s *Server) HandleSvg(url string, text []byte) {
 	}
 }
 
-func (s *Server) HandleMultiReqs(url string, f func(http.ResponseWriter, *http.Request)) {
+func (s *Server) HandleMultiReqs(url string, f http.HandlerFunc) {
 	s.mr[url] = f
 }
 
