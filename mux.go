@@ -2,19 +2,16 @@ package mux
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"mime"
 	"net/http"
 	"path"
 	"path/filepath"
-	"runtime/debug"
-	"strings"
 	"time"
 )
 
 type Server struct {
 	HTTPServer                    *http.Server
+	middlewares                   []Middleware
 	prehandlers                   []func(http.ResponseWriter, *http.Request) bool
 	r, mr                         map[string]func(http.ResponseWriter, *http.Request)
 	get, post, put, delete, patch map[string]func(http.ResponseWriter, *http.Request)
@@ -47,6 +44,11 @@ func (s *Server) Stop() error {
 		return e
 	}
 	return nil
+}
+
+// AddPrehandler adds prehandler which returns interrupt
+func (s *Server) AddPrehandler(f func(http.ResponseWriter, *http.Request) bool) {
+	s.prehandlers = append(s.prehandlers, f)
 }
 
 func (s *Server) GET(url string, f func(http.ResponseWriter, *http.Request)) {
@@ -144,92 +146,4 @@ func (s *Server) HandleMultiReqs(url string, f func(http.ResponseWriter, *http.R
 
 func (s *Server) Handle(pattern string, h http.Handler) {
 	s.r[pattern] = h.ServeHTTP
-}
-
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	defer func() {
-		if e := recover(); e != nil {
-			log.Println("⚠️", r.RequestURI, "⚠️\t", e, string(debug.Stack()))
-		}
-	}()
-
-	for _, v := range s.prehandlers {
-		interrupt := v(w, r)
-		if interrupt {
-			return
-		}
-	}
-	url := strings.Split(r.URL.String(), "?")[0]
-
-	switch r.Method {
-	case http.MethodGet:
-		if h, ok := s.get[url]; ok {
-			h(w, r)
-			return
-		}
-	case http.MethodPost:
-		if h, ok := s.post[url]; ok {
-			h(w, r)
-			return
-		}
-	case http.MethodPut:
-		if h, ok := s.put[url]; ok {
-			h(w, r)
-			return
-		}
-	case http.MethodDelete:
-		if h, ok := s.delete[url]; ok {
-			h(w, r)
-			return
-		}
-	case http.MethodPatch:
-		if h, ok := s.patch[url]; ok {
-			h(w, r)
-			return
-		}
-	}
-
-	if h, ok := s.r[url]; ok {
-		h(w, r)
-	} else if k, ok := hasPreffixInMap(s.mr, r.URL.String()); ok {
-		s.mr[k](w, r)
-	} else {
-		fmt.Fprint(w, `<!DOCTYPE html><html><head><title>404</title><meta charset="utf-8"><meta name="viewpos" content="width=device-width"></head><body>404 not found</body></html>`)
-	}
-}
-
-func (s *Server) findMethod(url string) (string, func(http.ResponseWriter, *http.Request), bool) {
-
-	return "", nil, false
-}
-
-func hasPreffixInMap(m map[string]func(http.ResponseWriter, *http.Request), p string) (string, bool) {
-	for k, _ := range m {
-		if len(p) >= len(k) && k == p[:len(k)] {
-			return k, true
-		}
-	}
-	return "", false
-}
-
-// AddPrehandler adds prehandler which returns interrupt
-func (s *Server) AddPrehandler(f func(http.ResponseWriter, *http.Request) bool) {
-	s.prehandlers = append(s.prehandlers, f)
-}
-
-// AddRoutes adds all s2's routes to server
-func (s *Server) AddRoutes(s2 *Server) {
-	for k, v := range s2.r {
-		_, ok := s.r[k]
-		if !ok {
-			s.r[k] = v
-		}
-	}
-
-	for k, v := range s2.mr {
-		_, ok := s.mr[k]
-		if !ok {
-			s.mr[k] = v
-		}
-	}
 }
