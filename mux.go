@@ -27,6 +27,8 @@ func NewServer(addr string) *Server {
 	s.put = make(map[string]http.HandlerFunc)
 	s.delete = make(map[string]http.HandlerFunc)
 	s.patch = make(map[string]http.HandlerFunc)
+
+	s.Use(gzipMiddleware)
 	return s
 }
 
