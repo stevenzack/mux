@@ -10,7 +10,6 @@ import (
 )
 
 type Server struct {
-	cfg                           Config
 	HTTPServer                    *http.Server
 	middlewares                   []Middleware
 	prehandlers                   []func(http.ResponseWriter, *http.Request) bool
@@ -32,14 +31,7 @@ func NewServer(addr string) *Server {
 	return s
 }
 
-func (s *Server) GzipEnabled(b bool) {
-	s.cfg.DisableGzip = !b
-}
-
 func (s *Server) ListenAndServe() error {
-	if !s.cfg.DisableGzip {
-		s.Use(gzipMiddleware)
-	}
 	return s.HTTPServer.ListenAndServe()
 }
 
