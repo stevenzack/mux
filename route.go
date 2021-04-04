@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"runtime/debug"
+	"strconv"
 	"strings"
 )
 
@@ -58,8 +59,16 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	} else if k, ok := hasPreffixInMap(s.mr, r.URL.String()); ok {
 		s.exec(s.mr[k], w, r)
 	} else {
-		fmt.Fprint(w, `<!DOCTYPE html><html><head><title>404</title><meta charset="utf-8"><meta name="viewpos" content="width=device-width"></head><body>404 not found</body></html>`)
+		s.NotFound(w, r)
 	}
+}
+
+func (s *Server) NotFound(w http.ResponseWriter, r *http.Request) {
+	s.Error(w, `not found`, http.StatusNotFound)
+}
+
+func (s *Server) Error(w http.ResponseWriter, e string, code int) {
+	fmt.Fprint(w, `<!DOCTYPE html><html><head><title>`+strconv.Itoa(code)+` `+e+`</title><meta charset="utf-8"><meta name="viewpos" content="width=device-width"></head><body>`+e+`</body></html>`)
 }
 
 func hasPreffixInMap(m map[string]http.HandlerFunc, p string) (string, bool) {
