@@ -4,11 +4,13 @@ import (
 	"compress/gzip"
 	"fmt"
 	"log"
+	"mime"
 	"net/http"
+	"path/filepath"
 	"strings"
 )
 
-func gzipMiddleware(hf http.HandlerFunc) http.HandlerFunc {
+func GzipAutoMiddleware(hf http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accept := r.Header.Get("Accept-Encoding")
 		content := r.Header.Get("Content-Encoding")
@@ -24,13 +26,17 @@ func gzipMiddleware(hf http.HandlerFunc) http.HandlerFunc {
 		}
 
 		if strings.Contains(accept, "gzip") {
-			w.Header().Set("Content-Encoding", "gzip")
-			gw := gzip.NewWriter(w)
-			defer gw.Flush()
-			defer gw.Close()
-			w = &ResponseWriterBuf{
-				Rw:     w,
-				Writer: gw,
+			ext := filepath.Ext(r.RequestURI)
+			mime := mime.TypeByExtension(ext)
+			if strings.HasPrefix(mime, "text/") || ext == ".json" || ext == ".js" {
+				w.Header().Set("Content-Encoding", "gzip")
+				gw := gzip.NewWriter(w)
+				defer gw.Flush()
+				defer gw.Close()
+				w = &ResponseWriterBuf{
+					Rw:     w,
+					Writer: gw,
+				}
 			}
 		}
 		hf(w, r)
