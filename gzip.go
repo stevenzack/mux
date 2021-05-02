@@ -28,7 +28,7 @@ func GzipAutoMiddleware(hf http.HandlerFunc) http.HandlerFunc {
 		if strings.Contains(accept, "gzip") {
 			ext := filepath.Ext(r.RequestURI)
 			mime := mime.TypeByExtension(ext)
-			if strings.HasPrefix(mime, "text/") || ext == ".json" || ext == ".js" {
+			if r.RequestURI == "/" || strings.HasPrefix(mime, "text/") || ext == ".json" || ext == ".js" {
 				w.Header().Set("Content-Encoding", "gzip")
 				gw := gzip.NewWriter(w)
 				defer gw.Flush()
