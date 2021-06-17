@@ -13,6 +13,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if e := recover(); e != nil {
 			log.Println("⚠️", r.RequestURI, "⚠️\t", e, string(debug.Stack()))
+			http.Error(w, "Server internal error", http.StatusInternalServerError)
 		}
 	}()
 
