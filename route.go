@@ -64,7 +64,15 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *Server) HandleNotFound(fn http.HandlerFunc) {
+	s.notFound = fn
+}
+
 func (s *Server) NotFound(w http.ResponseWriter, r *http.Request) {
+	if s.notFound != nil {
+		s.notFound(w, r)
+		return
+	}
 	s.Error(w, `not found`, http.StatusNotFound)
 }
 

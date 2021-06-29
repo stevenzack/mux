@@ -15,6 +15,7 @@ type Server struct {
 	prehandlers                   []func(http.ResponseWriter, *http.Request) bool
 	r, mr                         map[string]http.HandlerFunc
 	get, post, put, delete, patch map[string]http.HandlerFunc
+	notFound                      http.HandlerFunc
 }
 
 func NewServer(addr string) *Server {
