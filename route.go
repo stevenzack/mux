@@ -77,6 +77,7 @@ func (s *Server) NotFound(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) Error(w http.ResponseWriter, e string, code int) {
+	w.WriteHeader(code)
 	fmt.Fprint(w, `<!DOCTYPE html><html><head><title>`+strconv.Itoa(code)+` `+e+`</title><meta charset="utf-8"><meta name="viewpos" content="width=device-width"></head><body>`+e+`</body></html>`)
 }
 
